@@ -6,34 +6,37 @@ const StreakDisplay = ({ streak, longest }) => {
   const { theme } = useTheme();
 
   const getFireColor = (count) => {
-    if (count >= 30) return '#ef4444'; // Red hot
-    if (count >= 14) return '#f97316'; // Orange
-    if (count >= 7) return '#eab308'; // Yellow
-    return '#94a3b8'; // Slate/Grey
+    if (count >= 30) return '#ef4444';
+    if (count >= 14) return '#f97316';
+    if (count >= 7) return '#eab308';
+    return '#94a3b8';
   };
 
   return (
-    <div className={`flex items-center space-x-2 p-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+    <div className={`flex items-center space-x-2 py-1`}>
       <div className="relative">
         <Flame 
-          size={24} 
+          size={20} 
           color={getFireColor(streak)} 
           fill={streak > 0 ? getFireColor(streak) : 'none'} 
           className="transition-all duration-300"
         />
         {streak > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75`} style={{ backgroundColor: getFireColor(streak) }}></span>
-            <span className={`relative inline-flex rounded-full h-3 w-3`} style={{ backgroundColor: getFireColor(streak) }}></span>
+          <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: getFireColor(streak) }}></span>
+            <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: getFireColor(streak) }}></span>
           </span>
         )}
       </div>
-      <div className="flex flex-col">
-        <span className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          {streak} <span className="text-xs font-normal opacity-70">days</span>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}>
+          {streak}
         </span>
+        <span className={`text-xs ${theme === 'light' ? 'text-gray-500' : 'text-white/40'}`}>days</span>
         {longest > streak && (
-          <span className="text-xs text-gray-500">Best: {longest}</span>
+          <span className={`text-xs ml-1 ${theme === 'light' ? 'text-gray-400' : 'text-white/30'}`}>
+            (best: {longest})
+          </span>
         )}
       </div>
     </div>

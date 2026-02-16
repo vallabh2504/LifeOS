@@ -15,7 +15,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
+        <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white font-sans">
           <Navbar />
           <main className="flex-grow container mx-auto px-4 py-8">
             <Routes>
