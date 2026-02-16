@@ -8,11 +8,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#1E1E1E",    // Midnight Black (Background)
-        secondary: "#2D2D2D",  // Onyx (Card surfaces)
-        accent: "#00E5FF",     // Electric Cyan (CTAs/Active)
-        muted: "#B0B0B0",      // Slate Gray (Secondary text)
+        primary: "#050505",    // Deeper Black
+        secondary: "#121212",  // Darker Grey
+        accent: "#00E5FF",     // Electric Cyan
+        purple: {
+          500: "#7000FF",      // Cyber Purple
+        },
+        muted: "#888888",      // Dimmer Gray
       },
+      backgroundImage: {
+        'grid-pattern': "radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)",
+      },
+      animation: {
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      }
     },
   },
   plugins: [],
