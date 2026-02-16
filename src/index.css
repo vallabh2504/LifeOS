@@ -14,26 +14,10 @@ body {
   min-height: 100vh;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  @apply bg-gray-900;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-700 rounded-full;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-600;
-}
-
-/* Glass Effect */
 .glass {
   @apply bg-white/5 backdrop-blur-xl border border-white/10;
 }
 
-/* Neon Glow */
 .neon-text {
   text-shadow: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 20px rgba(0, 229, 255, 0.3);
 }
@@ -42,7 +26,6 @@ body {
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
 }
 
-/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
