@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import useFinanceStore from './store/financeStore';
 import { useTheme } from '../../shared/contexts/ThemeContext';
+import { Plus, Receipt } from 'lucide-react';
 
 const ExpenseForm = () => {
   const { addExpense, budgets, loading } = useFinanceStore();
-  const { theme } = useTheme();
+  const { theme, getThemeColors } = useTheme();
+  const colors = getThemeColors();
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState('');
@@ -23,7 +25,7 @@ const ExpenseForm = () => {
         amount: parseFloat(amount),
         notes
       });
-      setFeedback('Expense added!');
+      setFeedback('Expense added successfully!');
       setAmount('');
       setCategory('');
       setNotes('');
@@ -33,48 +35,67 @@ const ExpenseForm = () => {
     }
   };
 
-  const getThemeStyles = () => {
-    switch (theme) {
-      case 'midnight':
-        return 'bg-slate-900 text-cyan-400 border-slate-700';
-      case 'nature':
-        return 'bg-green-900 text-green-100 border-green-700';
-      case 'dark':
-        return 'bg-gray-800 text-white border-gray-700';
-      default:
-        return 'bg-white text-gray-900 border-gray-200';
-    }
-  };
-
   return (
-    <div className={`p-6 rounded-lg shadow-md border ${getThemeStyles()} mb-6`}>
-      <h2 className="text-xl font-bold mb-4">Log Expense</h2>
-
+    <div className="space-y-4">
+      {/* Success/Error feedback */}
       {feedback && (
-        <div className={`mb-4 p-2 rounded text-sm ${feedback.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+        <div className={`p-3 rounded-lg text-sm font-medium animate-fade-in ${
+          feedback.includes('Error') 
+            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+            : 'bg-green-500/20 text-green-400 border border-green-500/30'
+        }`}>
           {feedback}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full p-2 border rounded bg-transparent border-gray-500 focus:outline-none focus:border-blue-500"
-          />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${colors.muted}`}>Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={`w-full px-3 py-2.5 rounded-lg border backdrop-blur-sm transition-all ${
+                theme === 'light'
+                  ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                  : 'bg-white/5 border-white/10 text-white focus:border-cyan-500'
+              } focus:outline-none focus:ring-2 focus:ring-cyan-500/20`}
+            />
+          </div>
+          <div>
+            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${colors.muted}`}>Amount</label>
+            <div className="relative">
+              <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${colors.muted}`}>$</span>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className={`w-full pl-7 pr-3 py-2.5 rounded-lg border backdrop-blur-sm transition-all ${
+                  theme === 'light'
+                    ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                    : 'bg-white/5 border-white/10 text-white focus:border-cyan-500'
+                } focus:outline-none focus:ring-2 focus:ring-cyan-500/20`}
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+          </div>
         </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1">Category</label>
+          <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${colors.muted}`}>Category</label>
           <input
             type="text"
             list="categories"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full p-2 border rounded bg-transparent border-gray-500 focus:outline-none focus:border-blue-500"
-            placeholder="e.g. Food"
+            className={`w-full px-3 py-2.5 rounded-lg border backdrop-blur-sm transition-all ${
+              theme === 'light'
+                ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                : 'bg-white/5 border-white/10 text-white focus:border-cyan-500'
+            } focus:outline-none focus:ring-2 focus:ring-cyan-500/20`}
+            placeholder="e.g. Food, Transport"
           />
           <datalist id="categories">
             {budgets.map((b) => (
@@ -82,36 +103,43 @@ const ExpenseForm = () => {
             ))}
           </datalist>
         </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1">Amount ($)</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-2 border rounded bg-transparent border-gray-500 focus:outline-none focus:border-blue-500"
-            placeholder="0.00"
-            step="0.01"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-1">Notes</label>
+          <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${colors.muted}`}>Notes (optional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full p-2 border rounded bg-transparent border-gray-500 focus:outline-none focus:border-blue-500"
+            className={`w-full px-3 py-2.5 rounded-lg border backdrop-blur-sm transition-all resize-none ${
+              theme === 'light'
+                ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                : 'bg-white/5 border-white/10 text-white focus:border-cyan-500'
+            } focus:outline-none focus:ring-2 focus:ring-cyan-500/20`}
             rows="2"
             placeholder="Details about the expense..."
           />
         </div>
-        <div className="md:col-span-2 text-right">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Logging...' : 'Add Expense'}
-          </button>
-        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !amount || !category}
+          className={`w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+            theme === 'light'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40'
+              : `bg-gradient-to-r ${colors.gradient} hover:opacity-90 text-white shadow-lg ${colors.glow} hover:scale-[1.02]`
+          }`}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              Adding...
+            </span>
+          ) : (
+            <>
+              <Plus size={18} />
+              Add Expense
+            </>
+          )}
+        </button>
       </form>
     </div>
   );
