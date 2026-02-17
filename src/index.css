@@ -8,7 +8,28 @@
   --accent: #00E5FF;
 }
 
-/* Theme-specific backgrounds */
+/* Theme-specific backgrounds - BRD Themes */
+/* Forest Light */
+.forestLight {
+  background: linear-gradient(135deg, #F5F9F6 0%, #E8F3EC 50%, #F5F9F6 100%);
+}
+
+/* Forest Dark */
+.forestDark {
+  background: radial-gradient(ellipse at top, #1E2821 0%, #0F1A14 50%, #0A120D 100%);
+}
+
+/* Beach Light */
+.beachLight {
+  background: linear-gradient(135deg, #FFF9F0 0%, #F5EDE0 50%, #FFF9F0 100%);
+}
+
+/* Beach Dark */
+.beachDark {
+  background: radial-gradient(ellipse at top, #1A2632 0%, #0F1A22 50%, #050A0F 100%);
+}
+
+/* Legacy themes for backward compatibility */
 .midnight {
   background: radial-gradient(ellipse at top, #0f172a 0%, #020617 50%, #020617 100%);
 }
@@ -33,23 +54,96 @@ body {
 @layer components {
   /* Glassmorphism utilities */
   .glass-card {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl;
+    @apply backdrop-blur-xl border rounded-2xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Theme-specific glass card styles */
+  .glass-card.forestLight,
+  .glass-card.beachLight {
+    @apply bg-white/60 border-gray-200/50;
+  }
+  
+  .glass-card.forestDark,
+  .glass-card.beachDark,
+  .glass-card.midnight,
+  .glass-card.nature,
+  .glass-card.dark {
+    @apply bg-white/5 border-white/10;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
   
   .glass-card-hover {
-    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl;
+    @apply backdrop-blur-xl border rounded-2xl;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    @apply transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-[1.02];
+    @apply transition-all duration-300;
+  }
+  
+  .glass-card-hover:hover {
+    @apply scale-[1.02];
+  }
+  
+  .glass-card-hover.forestLight,
+  .glass-card-hover.beachLight {
+    @apply bg-white/70 border-gray-200/50;
+  }
+  
+  .glass-card-hover.forestLight:hover,
+  .glass-card-hover.beachLight:hover {
+    @apply bg-white/80 border-gray-300/50;
+  }
+  
+  .glass-card-hover.forestDark,
+  .glass-card-hover.beachDark,
+  .glass-card-hover.midnight,
+  .glass-card-hover.nature,
+  .glass-card-hover.dark {
+    @apply bg-white/5 border-white/10;
+  }
+  
+  .glass-card-hover.forestDark:hover,
+  .glass-card-hover.beachDark:hover,
+  .glass-card-hover.midnight:hover,
+  .glass-card-hover.nature:hover,
+  .glass-card-hover.dark:hover {
+    @apply bg-white/10 border-white/20;
   }
   
   .glass-input {
-    @apply backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg;
-    @apply focus:border-white/30 focus:bg-white/10 focus:outline-none transition-all;
+    @apply backdrop-blur-sm border rounded-lg;
+    @apply focus:outline-none transition-all;
+  }
+  
+  .glass-input.forestLight,
+  .glass-input.beachLight {
+    @apply bg-white/40 border-gray-200 text-gray-900;
+    @apply focus:border-blue-500 focus:bg-white/60;
+  }
+  
+  .glass-input.forestDark,
+  .glass-input.beachDark,
+  .glass-input.midnight,
+  .glass-input.nature,
+  .glass-input.dark {
+    @apply bg-white/5 border-white/10 text-white;
+    @apply focus:border-white/30 focus:bg-white/10;
   }
   
   .glass-panel {
-    @apply backdrop-blur-md bg-black/20 border border-white/5 rounded-xl;
+    @apply backdrop-blur-md border rounded-xl;
+  }
+  
+  .glass-panel.forestLight,
+  .glass-panel.beachLight {
+    @apply bg-white/40 border-gray-200/30;
+  }
+  
+  .glass-panel.forestDark,
+  .glass-panel.beachDark,
+  .glass-panel.midnight,
+  .glass-panel.nature,
+  .glass-panel.dark {
+    @apply bg-black/20 border-white/5;
   }
 
   /* Theme-specific accent buttons */
@@ -57,69 +151,6 @@ body {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
     @apply bg-gradient-to-r from-blue-500 to-purple-500 text-white;
     @apply hover:shadow-lg hover:scale-105;
-  }
-
-  .btn-primary-midnight {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
-    @apply bg-gradient-to-r from-cyan-500 to-blue-500 text-white;
-    @apply hover:shadow-[0_0_20px_rgba(0,229,255,0.4)] hover:scale-105;
-  }
-
-  .btn-primary-nature {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
-    @apply bg-gradient-to-r from-green-500 to-emerald-500 text-white;
-    @apply hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] hover:scale-105;
-  }
-
-  .btn-primary-dark {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
-    @apply bg-gradient-to-r from-purple-500 to-violet-500 text-white;
-    @apply hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-105;
-  }
-
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    @apply bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400;
-  }
-  
-  .gradient-text-midnight {
-    @apply bg-clip-text text-transparent;
-    @apply bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400;
-  }
-  
-  .gradient-text-nature {
-    @apply bg-clip-text text-transparent;
-    @apply bg-gradient-to-r from-green-400 via-emerald-400 to-green-400;
-  }
-  
-  .gradient-text-dark {
-    @apply bg-clip-text text-transparent;
-    @apply bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400;
-  }
-
-  /* Neon effects */
-  .neon-text {
-    text-shadow: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 20px rgba(0, 229, 255, 0.3);
-  }
-
-  .neon-border {
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
-  }
-
-  /* Premium card styles */
-  .premium-card {
-    @apply relative overflow-hidden;
-    @apply backdrop-blur-xl border border-white/10 rounded-2xl;
-    @apply bg-gradient-to-br from-white/10 to-white/5;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  }
-
-  .premium-card::before {
-    content: '';
-    @apply absolute inset-0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
-    pointer-events: none;
   }
 
   /* Progress ring */
@@ -176,4 +207,15 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-white/30;
+}
+
+/* Light theme scrollbar */
+.forestLight ::-webkit-scrollbar-thumb,
+.beachLight ::-webkit-scrollbar-thumb {
+  @apply bg-gray-300;
+}
+
+.forestLight ::-webkit-scrollbar-thumb:hover,
+.beachLight ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
 }

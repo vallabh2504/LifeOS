@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, Code, DollarSign, Activity, BookOpen, Search, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, User, Code, DollarSign, Activity, BookOpen, Search, Moon, Sun, Palette } from 'lucide-react';
 import SearchBar from './SearchBar';
 import { useTheme } from '../shared/contexts/ThemeContext';
 
 const Navbar = () => {
   const location = useLocation();
-  const { theme, toggleTheme, getThemeColors } = useTheme();
+  const { theme, toggleTheme, getThemeColors, getThemeName } = useTheme();
   const colors = getThemeColors();
 
   const isActive = (path) => location.pathname === path;
@@ -74,13 +74,11 @@ const Navbar = () => {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className={`p-2.5 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-110 group`}
-              title={`Current: ${theme}. Click to switch.`}
+              className={`p-2.5 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-110 group flex items-center gap-2`}
+              title={`Current: ${getThemeName()}. Click to switch.`}
             >
-              {theme === 'midnight' && <Moon size={18} className="text-cyan-400 group-hover:text-cyan-300" />}
-              {theme === 'nature' && <Sun size={18} className="text-green-400 group-hover:text-green-300" />}
-              {theme === 'dark' && <Moon size={18} className="text-purple-400 group-hover:text-purple-300" />}
-              {theme === 'light' && <Sun size={18} className="text-blue-400 group-hover:text-blue-300" />}
+              <Palette size={18} className={colors.primary.replace('text-', 'text-')} />
+              <span className={`text-xs ${colors.muted}`}>{getThemeName()}</span>
             </button>
           </div>
 

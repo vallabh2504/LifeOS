@@ -273,3 +273,94 @@ create policy "Users can CRUD their own journal entries" on public.journal_entri
 
 create trigger update_journal_timestamp before update on public.journal_entries
   for each row execute procedure update_timestamp();
+
+-- 11. DEVELOPMENT DECK - 3-Level Hierarchy (Deck → Category → Project)
+
+-- Development Categories (Level 2)
+create table public.dev_categories (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  name text not null,
+  description text,
+  color text default '#6366f1',
+  icon text,
+  order_index integer default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.dev_categories enable row level security;
+
+create policy "Users can CRUD their own dev categories" on public.dev_categories
+  for all using (auth.uid() = user_id);
+
+-- Development Projects (Level 3)
+create table public.dev_projects (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  category_id uuid references public.dev_categories on delete cascade,
+  name text not null,
+  description text,
+  status text default 'active' check (status in ('active', 'completed', 'archived', 'on_hold')),
+  due_date timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.dev_projects enable row level security;
+
+create policy "Users can CRUD their own dev projects" on public.dev_projects
+  for all using (auth.uid() = user_id);
+
+-- Development Tasks - Kanban items (linked to projects)
+create table public.dev_tasks (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  project_id uuid references public.dev_projects on delete cascade,
+  category_id uuid references public.dev_categories,
+  title text not null,
+  description text,
+  status text default 'todo' check (status in ('todo', 'doing', 'done')),
+  priority text default 'medium' check (priority in ('low', 'medium', 'high', 'urgent')),
+  due_date timestamptz,
+  order_index integer default 0,
+  gcal_event_id text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.dev_tasks enable row level security;
+
+create policy "Users can CRUD their own dev tasks" on public.dev_tasks
+  for all using (auth.uid() = user_id);
+
+-- Development Notes (Rich text notes for projects)
+create table public.dev_notes (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  project_id uuid references public.dev_projects on delete cascade,
+  category_id uuid references public.dev_categories,
+  title text not null,
+  content text,
+  is_pinned boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.dev_notes enable row level security;
+
+create policy "Users can CRUD their own dev notes" on public.dev_notes
+  for all using (auth.uid() = user_id);
+
+-- Development Doubts (Questions/Issues to resolve)
+create table public.dev_doubts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  project_id uuid references public.dev_projects on delete cascade,
+  category_id uuid references public.dev_categories,
+  question text not null,
+  resolved boolean default false,
+  resolved_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.dev_doubts enable row level security;
+
+create policy "Users can CRUD their own dev doubts" on public.dev_doubts
+  for all using (auth.uid() = user_id);
