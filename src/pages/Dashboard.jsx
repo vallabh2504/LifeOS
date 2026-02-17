@@ -12,11 +12,11 @@ import { Calendar, Zap, Layout, User, Code, DollarSign, Flame, Book, RefreshCcw 
 const Dashboard = () => {
   // Use stores
   const { tasks: personalTasks, fetchTasks: fetchPersonal, loading: pLoading } = usePersonalStore();
-  const { tasks: devTasks, fetchTasks: fetchDev, loading: dLoading } = useDevelopmentStore();
+  const { tasks: devTasks, fetchAll: fetchDev, loading: dLoading } = useDevelopmentStore();
   const { expenses, fetchData: fetchFinance, loading: fLoading } = useFinanceStore();
   const { habits, fetchHabits, loading: hLoading } = useHabitsStore();
   const { entries: journalEntries, fetchEntries, loading: jLoading } = useJournalStore();
-  const { theme, getThemeColors } = useTheme();
+  const { theme, getThemeColors, getThemeName } = useTheme();
   const colors = getThemeColors();
 
   useEffect(() => {
@@ -27,8 +27,8 @@ const Dashboard = () => {
     fetchEntries();
   }, []);
 
-  const pendingPersonal = personalTasks?.filter(t => t.status === 'pending') || [];
-  const pendingDev = devTasks?.filter(t => t.status === 'pending') || [];
+  const pendingPersonal = personalTasks?.filter(t => t.status !== 'done') || [];
+  const pendingDev = devTasks?.filter(t => t.status !== 'done') || [];
   const activeHabits = habits?.filter(h => h.active !== false) || []; 
   const recentExpenses = expenses?.slice(0, 5) || [];
   const recentJournal = journalEntries?.slice(0, 3) || [];
@@ -59,7 +59,7 @@ const Dashboard = () => {
           </h1>
           <p className={`mt-2 font-medium tracking-wide uppercase text-xs flex items-center gap-2 ${colors.muted}`}>
             <span className={`w-2 h-2 ${colors.primary.replace('text-', 'bg-')} rounded-full animate-pulse shadow-[0_0_8px_currentColor]`}></span>
-            Operator: Vallabh | Status: Optimal | Theme: {theme}
+            Operator: Vallabh | Status: Optimal | Theme: {getThemeName()}
           </p>
         </div>
         <button 
