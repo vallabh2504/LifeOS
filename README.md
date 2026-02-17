@@ -26,3 +26,4 @@ This project follows the **LEGO Architecture** principle:
 - **Styling**: Tailwind CSS
 - **Database/Auth**: Supabase
 - **Icons**: Lucide React
+<!-- Force Vercel Redeploy -->\n
