@@ -5,224 +5,141 @@ import useDevelopmentStore from '../decks/development/store/developmentStore';
 import useFinanceStore from '../decks/finance/store/financeStore';
 import useHabitsStore from '../decks/habits/store/habitsStore';
 import useJournalStore from '../decks/journal/store/journalStore';
-import { calendarService } from '../shared/services/calendarService';
-import { useTheme } from '../shared/contexts/ThemeContext';
-import { Calendar, Zap, Layout, User, Code, DollarSign, Flame, Book, RefreshCcw } from 'lucide-react';
+import { Calendar, User, Code, DollarSign, Flame, Book, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 
-const Dashboard = () => {
-  // Use stores
-  const { tasks: personalTasks, fetchTasks: fetchPersonal, loading: pLoading } = usePersonalStore();
-  const { tasks: devTasks, fetchAll: fetchDev, loading: dLoading } = useDevelopmentStore();
-  const { expenses, fetchData: fetchFinance, loading: fLoading } = useFinanceStore();
-  const { habits, fetchHabits, loading: hLoading } = useHabitsStore();
-  const { entries: journalEntries, fetchEntries, loading: jLoading } = useJournalStore();
-  const { theme, getThemeColors, getThemeName } = useTheme();
-  const colors = getThemeColors();
+const EnterpriseDashboard = () => {
+  const { tasks: personalTasks, fetchTasks: fetchPersonal } = usePersonalStore();
+  const { tasks: devTasks, fetchAll: fetchDev } = useDevelopmentStore();
+  const { expenses, fetchData: fetchFinance } = useFinanceStore();
+  const { habits, fetchHabits } = useHabitsStore();
+  const { entries: journalEntries, fetchEntries } = useJournalStore();
 
   useEffect(() => {
-    fetchPersonal();
-    fetchDev();
-    fetchFinance();
-    fetchHabits();
-    fetchEntries();
+    fetchPersonal(); fetchDev(); fetchFinance(); fetchHabits(); fetchEntries();
   }, []);
 
   const pendingPersonal = personalTasks?.filter(t => t.status !== 'done') || [];
   const pendingDev = devTasks?.filter(t => t.status !== 'done') || [];
-  const activeHabits = habits?.filter(h => h.active !== false) || []; 
-  const recentExpenses = expenses?.slice(0, 5) || [];
-  const recentJournal = journalEntries?.slice(0, 3) || [];
-
-  const handleCalendarSync = async () => {
-    try {
-      await calendarService.signIn();
-      const events = await calendarService.listEvents();
-      alert(`Synced ${events.length} events from Google Calendar!`);
-    } catch (error) {
-      console.error("Calendar sync failed", error);
-      alert("Calendar sync failed. See console.");
-    }
-  };
 
   return (
-    <div className={`min-h-screen p-6 lg:p-10 relative overflow-hidden ${theme === 'light' ? 'bg-gradient-to-br from-slate-100 via-blue-50 to-slate-100' : colors.bgGradient}`}>
-      {/* Background Decor */}
-      <div className={`absolute top-[-10%] right-[-10%] w-[500px] h-[500px] ${colors.primary}/5 rounded-full blur-[120px] pointer-events-none`}></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"></div>
-      
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-        <div>
-          <h1 className={`text-4xl md:text-5xl font-black tracking-tighter ${theme === 'light' ? 'text-gray-900' : colors.text}`}>
-            <span className={`bg-gradient-to-r ${colors.gradient} bg-clip-text text-transparent`}>
-              SYSTEM.LifeOS
-            </span>
-          </h1>
-          <p className={`mt-2 font-medium tracking-wide uppercase text-xs flex items-center gap-2 ${colors.muted}`}>
-            <span className={`w-2 h-2 ${colors.primary.replace('text-', 'bg-')} rounded-full animate-pulse shadow-[0_0_8px_currentColor]`}></span>
-            Operator: Vallabh | Status: Optimal | Theme: {getThemeName()}
-          </p>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      {/* Top Navigation */}
+      <nav className="bg-white border-b border-slate-200 px-6 py-3 flex justify-between items-center sticky top-0 z-10">
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">L</div>
+            <span className="font-semibold text-slate-700">LifeOS Enterprise</span>
         </div>
-        <button 
-          onClick={handleCalendarSync}
-          className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium transition-all duration-300 hover:scale-105 backdrop-blur-xl border ${colors.border} ${colors.cardBg} ${colors.text} hover:shadow-[0_0_30px_rgba(0,0,0,0.3)]`}
-        >
-          <Calendar size={18} className={colors.primary} />
-          <span>Sync Neural Calendar</span>
-        </button>
-      </header>
+        <div className="flex items-center gap-4">
+            <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500">
+                <Calendar size={20} />
+            </button>
+            <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-medium text-sm">V</div>
+        </div>
+      </nav>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 mt-8">
+      <main className="max-w-7xl mx-auto p-6">
         
-        {/* Today's Agenda - Left Column */}
-        <section className="lg:col-span-4 space-y-6">
-          <div className={`glass-card h-full p-6 ${theme === 'light' ? 'bg-white/60' : ''}`}>
-            <h2 className={`text-xl font-bold mb-6 flex items-center gap-3 ${colors.text}`}>
-              <Zap className={colors.primary} size={20} />
-              Current Priorities
-            </h2>
-            
-            <div className="space-y-4">
-              {pendingPersonal.length === 0 && pendingDev.length === 0 && (
-                <div className="text-center py-10">
-                  <p className={`italic ${colors.muted}`}>Clear schedule. All objectives met.</p>
-                </div>
-              )}
-              
-              {pendingPersonal.slice(0, 4).map(task => (
-                <div key={task.id} className={`group flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.02] ${theme === 'light' ? 'bg-white/40 border-gray-200 hover:bg-white/60' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-1 h-8 ${colors.primary.replace('text-', 'bg-')} rounded-full shadow-[0_0_8px_currentColor]`}></div>
-                    <div>
-                      <h3 className={`font-semibold text-sm group-hover:${colors.primary} transition-colors ${theme === 'light' ? 'text-gray-800' : 'text-white'}`}>{task.title}</h3>
-                      <span className={`text-[10px] uppercase tracking-widest ${colors.muted}`}>Personal</span>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-mono ${colors.muted}`}>{task.due_date ? task.due_date.split('T')[0] : 'STANDBY'}</span>
-                </div>
-              ))}
+        {/* Page Header */}
+        <div className="mb-8">
+            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+            <p className="text-slate-500 text-sm mt-1">Overview of your personal and professional metrics.</p>
+        </div>
 
-              {pendingDev.slice(0, 4).map(task => (
-                <div key={task.id} className={`group flex items-center justify-between p-4 rounded-xl border transition-all hover:scale-[1.02] ${theme === 'light' ? 'bg-white/40 border-gray-200 hover:bg-white/60' : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="w-1 h-8 bg-purple-500 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.5)]"></div>
-                    <div>
-                      <h3 className="font-semibold text-sm group-hover:text-purple-400 transition-colors text-white">{task.title}</h3>
-                      <span className={`text-[10px] uppercase tracking-widest ${colors.muted}`}>Dev.Branch</span>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-mono ${colors.muted}`}>{task.due_date ? task.due_date.split('T')[0] : 'STANDBY'}</span>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <KPICard title="Personal Tasks" value={pendingPersonal.length} sub="Active" color="blue" />
+            <KPICard title="Dev Tasks" value={pendingDev.length} sub="In Progress" color="purple" />
+            <KPICard title="Expenses" value={expenses?.length || 0} sub="This Month" color="emerald" />
+            <KPICard title="Habits" value={habits?.length || 0} sub="Tracked" color="orange" />
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Recent Activity Table */}
+            <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h2 className="font-semibold text-slate-800">Pending Items</h2>
+                    <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</button>
                 </div>
-              ))}
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-500">
+                        <tr>
+                            <th className="px-6 py-3 font-medium">Task</th>
+                            <th className="px-6 py-3 font-medium">Category</th>
+                            <th className="px-6 py-3 font-medium">Status</th>
+                            <th className="px-6 py-3 font-medium">Due</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {[...pendingPersonal, ...pendingDev].slice(0, 6).map((task, i) => (
+                            <tr key={i} className="hover:bg-slate-50/50">
+                                <td className="px-6 py-3 font-medium text-slate-700">{task.title}</td>
+                                <td className="px-6 py-3 text-slate-500">{i < pendingPersonal.length ? 'Personal' : 'Dev'}</td>
+                                <td className="px-6 py-3">
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+                                        <AlertCircle size={12} /> Pending
+                                    </span>
+                                </td>
+                                <td className="px-6 py-3 text-slate-500">{task.due_date ? task.due_date.split('T')[0] : '-'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-            
-            {(pendingPersonal.length > 4 || pendingDev.length > 4) && (
-              <button className={`w-full mt-6 py-2 text-xs font-bold uppercase tracking-widest transition-colors hover:${colors.primary} ${colors.muted}`}>
-                + View All Uplinks
-              </button>
-            )}
-          </div>
-        </section>
 
-        {/* Right Column - Decks Grid */}
-        <section className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Deck Cards */}
-          <DeckCard 
-            to="/personal" 
-            title="Personal" 
-            count={pendingPersonal.length} 
-            label="Pending Tasks" 
-            icon={<User size={24} />}
-            color="from-blue-500/20 to-blue-900/40"
-            accent="bg-blue-500"
-            colors={colors}
-            theme={theme}
-          />
+            {/* Sidebar Links */}
+            <div className="space-y-6">
+                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                    <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
+                    <div className="space-y-2">
+                        <ActionBtn icon={<User size={16}/>} label="Add Task" />
+                        <ActionBtn icon={<Code size={16}/>} label="Log Dev Work" />
+                        <ActionBtn icon={<DollarSign size={16}/>} label="Add Expense" />
+                    </div>
+                </div>
 
-          <DeckCard 
-            to="/development" 
-            title="Development" 
-            count={pendingDev.length} 
-            label="Active Issues" 
-            icon={<Code size={24} />}
-            color="from-purple-500/20 to-purple-900/40"
-            accent="bg-purple-500"
-            colors={colors}
-            theme={theme}
-          />
-
-          <DeckCard 
-            to="/finance" 
-            title="Finance" 
-            count={recentExpenses.length} 
-            label="Recent Txns" 
-            icon={<DollarSign size={24} />}
-            color="from-emerald-500/20 to-emerald-900/40"
-            accent="bg-emerald-500"
-            colors={colors}
-            theme={theme}
-          />
-
-          <DeckCard 
-            to="/habits" 
-            title="Habits" 
-            count={activeHabits.length} 
-            label="Active Streaks" 
-            icon={<Flame size={24} />}
-            color="from-orange-500/20 to-orange-900/40"
-            accent="bg-orange-500"
-            colors={colors}
-            theme={theme}
-          />
-
-          <DeckCard 
-            to="/journal" 
-            title="Journal" 
-            count={recentJournal.length} 
-            label="Recent Entries" 
-            icon={<Book size={24} />}
-            color="from-indigo-500/20 to-indigo-900/40"
-            accent="bg-indigo-500"
-            colors={colors}
-            theme={theme}
-            className="md:col-span-2"
-          />
-
-        </section>
-      </div>
+                <div className="bg-blue-50 rounded-lg border border-blue-100 p-6">
+                    <h3 className="font-semibold text-blue-900 mb-2">Productivity Tip</h3>
+                    <p className="text-sm text-blue-700">You have 3 tasks due today. Focus on the most complex one first when your energy is highest.</p>
+                </div>
+            </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-const DeckCard = ({ to, title, count, label, icon, color, accent, colors, theme, className = "" }) => (
-  <Link to={to} className={`group block ${className}`}>
-    <div className={`h-full glass-card-hover rounded-2xl p-6 relative overflow-hidden ${theme === 'light' ? 'bg-white/70' : ''}`}>
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-      
-      <div className="relative z-10 flex flex-col justify-between h-full">
-        <div className="flex justify-between items-start mb-8">
-          <div className={`p-3 rounded-xl ${theme === 'light' ? 'bg-gray-100 border border-gray-200' : 'bg-white/5 border border-white/10'} group-hover:scale-110 transition-transform duration-500`}>
-            {icon}
-          </div>
-          <div className="flex flex-col items-end">
-            <span className={`text-3xl font-black font-mono group-hover:text-white transition-colors ${theme === 'light' ? 'text-gray-800' : colors.text}`}>
-              {count.toString().padStart(2, '0')}
-            </span>
-            <span className={`text-[10px] uppercase tracking-tighter font-bold ${colors.muted}`}>{label}</span>
-          </div>
+const KPICard = ({ title, value, sub, color }) => {
+    const colors = {
+        blue: 'text-blue-600 bg-blue-50',
+        purple: 'text-purple-600 bg-purple-50',
+        emerald: 'text-emerald-600 bg-emerald-50',
+        orange: 'text-orange-600 bg-orange-50'
+    };
+    return (
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+            <div className="flex justify-between items-start mb-4">
+                <span className="text-slate-500 text-sm font-medium">{title}</span>
+                <div className={`p-2 rounded-lg ${colors[color]}`}>
+                    {color === 'blue' && <User size={16} />}
+                    {color === 'purple' && <Code size={16} />}
+                    {color === 'emerald' && <DollarSign size={16} />}
+                    {color === 'orange' && <Flame size={16} />}
+                </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{value}</div>
+            <div className="text-xs text-slate-400 mt-1">{sub}</div>
         </div>
-        
-        <div>
-          <h3 className={`text-xl font-bold tracking-tight group-hover:translate-x-1 transition-transform ${theme === 'light' ? 'text-gray-900' : colors.text}`}>{title}</h3>
-          <div className={`w-12 h-1 ${accent} mt-2 rounded-full group-hover:w-20 transition-all duration-500 shadow-lg`}></div>
-        </div>
-      </div>
-      
-      {/* Decorative inner glow */}
-      <div className={`absolute -bottom-4 -right-4 w-24 h-24 ${colors.primary}/10 rounded-full blur-2xl group-hover:${colors.primary}/20 transition-colors`}></div>
-    </div>
-  </Link>
-);
+    )
+}
 
-export default Dashboard;
+const ActionBtn = ({ icon, label }) => (
+    <button className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all group">
+        <span className="text-slate-400 group-hover:text-blue-600">{icon}</span>
+        {label}
+        <ArrowRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+)
+
+export default EnterpriseDashboard;
