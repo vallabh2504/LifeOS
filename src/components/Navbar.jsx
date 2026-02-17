@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, Code, DollarSign, Activity, BookOpen, Search, Moon, Sun, Palette } from 'lucide-react';
+import { LayoutDashboard, User, Code, DollarSign, Activity, BookOpen, Search, Moon, Sun, Palette, ArrowLeft, Check } from 'lucide-react';
 import SearchBar from './SearchBar';
 import { useTheme } from '../shared/contexts/ThemeContext';
 
 const Navbar = () => {
   const location = useLocation();
-  const { theme, toggleTheme, getThemeColors, getThemeName } = useTheme();
+  const { theme, toggleTheme, getThemeColors, getThemeName, themes, setTheme } = useTheme();
   const colors = getThemeColors();
+  const [showThemeDropdown, setShowThemeDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowThemeDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  // Check if we're in a deck (not on dashboard)
+  const isInDeck = location.pathname !== '/' && location.pathname !== '/dashboard';
 
   const isActive = (path) => location.pathname === path;
 
@@ -27,6 +43,16 @@ const Navbar = () => {
           
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center gap-2">
+            {/* Back Button - only show when in a deck */}
+            {isInDeck && (
+              <Link
+                to="/"
+                className={`p-2 rounded-lg hover:bg-white/10 transition-colors mr-1`}
+                title="Back to Dashboard"
+              >
+                <ArrowLeft size={20} className="text-white/70" />
+              </Link>
+            )}
             <div className={`w-9 h-9 bg-gradient-to-br ${colors.gradient} rounded-lg flex items-center justify-center text-white font-bold shadow-lg ${colors.glow} hover:scale-110 transition-transform`}>
               L
             </div>
@@ -71,15 +97,48 @@ const Navbar = () => {
               <SearchBar />
             </div>
             
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className={`p-2.5 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-110 group flex items-center gap-2`}
-              title={`Current: ${getThemeName()}. Click to switch.`}
-            >
-              <Palette size={18} className={colors.primary.replace('text-', 'text-')} />
-              <span className={`text-xs ${colors.muted}`}>{getThemeName()}</span>
-            </button>
+            {/* Theme Toggle Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowThemeDropdown(!showThemeDropdown)}
+                className={`p-2.5 rounded-xl backdrop-blur-md bg-white/5 border border-white/10 hover:bg-white/10 transition-all hover:scale-110 group flex items-center gap-2`}
+                title="Change Theme"
+              >
+                <Palette size={18} className={colors.primary.replace('text-', 'text-')} />
+                <span className={`text-xs ${colors.muted}`}>{getThemeName()}</span>
+              </button>
+              
+              {/* Theme Dropdown */}
+              {showThemeDropdown && (
+                <div className={`absolute top-full right-0 mt-2 w-48 rounded-xl ${colors.cardBg} border ${colors.border} shadow-xl z-50 overflow-hidden`}>
+                  <div className="p-2">
+                    <p className={`text-xs font-medium px-3 py-2 ${colors.muted}`}>Select Theme</p>
+                    {themes.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => {
+                          setTheme(t);
+                          setShowThemeDropdown(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                          theme === t 
+                            ? `${colors.primaryBg}/20 ${colors.primary}` 
+                            : `${colors.text} hover:${colors.primaryBg}/10`
+                        }`}
+                      >
+                        <div className="flex-1 text-left text-sm font-medium">
+                          {t === 'forestLight' && '🌲 Forest Light'}
+                          {t === 'forestDark' && '🌲 Forest Dark'}
+                          {t === 'beachLight' && '🏖️ Beach Light'}
+                          {t === 'beachDark' && '🏖️ Beach Dark'}
+                        </div>
+                        {theme === t && <Check size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}

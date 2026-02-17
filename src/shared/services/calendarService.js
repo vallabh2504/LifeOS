@@ -5,6 +5,7 @@ const SCOPES = "https://www.googleapis.com/auth/calendar.events";
 let gapiInited = false;
 let gisInited = false;
 let tokenClient;
+let initPromise = null;
 
 export const calendarService = {
   
@@ -12,6 +13,17 @@ export const calendarService = {
     return new Promise((resolve, reject) => {
       if (window.gapi) {
         resolve();
+        return;
+      }
+      // Check if script already exists
+      if (document.querySelector('script[src="https://apis.google.com/js/api.js"]')) {
+        // Wait for it to load
+        const checkGapi = setInterval(() => {
+          if (window.gapi) {
+            clearInterval(checkGapi);
+            resolve();
+          }
+        }, 100);
         return;
       }
       const script = document.createElement('script');
@@ -28,6 +40,17 @@ export const calendarService = {
         resolve();
         return;
       }
+      // Check if script already exists
+      if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+        // Wait for it to load
+        const checkGis = setInterval(() => {
+          if (window.google) {
+            clearInterval(checkGis);
+            resolve();
+          }
+        }, 100);
+        return;
+      }
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.onload = () => resolve();
@@ -37,44 +60,82 @@ export const calendarService = {
   },
 
   async initClient() {
-    await Promise.all([this.loadGapi(), this.loadGis()]);
+    // Prevent multiple simultaneous initialization attempts
+    if (initPromise) {
+      return initPromise;
+    }
     
-    return new Promise((resolve, reject) => {
-      window.gapi.load('client', async () => {
-        try {
-          await window.gapi.client.init({
-            clientId: GOOGLE_CLIENT_ID,
-            discoveryDocs: DISCOVERY_DOCS,
+    initPromise = (async () => {
+      try {
+        await Promise.all([this.loadGapi(), this.loadGis()]);
+        
+        return new Promise((resolve, reject) => {
+          window.gapi.load('client', async () => {
+            try {
+              await window.gapi.client.init({
+                clientId: GOOGLE_CLIENT_ID,
+                discoveryDocs: DISCOVERY_DOCS,
+              });
+              gapiInited = true;
+              
+              tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined at request time
+              });
+              gisInited = true;
+              resolve();
+            } catch (err) {
+              console.error("Error initializing GAPI client:", err);
+              initPromise = null; // Reset so we can retry
+              reject(err);
+            }
           });
-          gapiInited = true;
-          
-          tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: SCOPES,
-            callback: '', // defined at request time
-          });
-          gisInited = true;
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
+        });
+      } catch (err) {
+        console.error("Error loading GAPI/GIS:", err);
+        initPromise = null; // Reset so we can retry
+        throw err;
+      }
+    })();
+    
+    return initPromise;
   },
 
   async signIn() {
-    if (!tokenClient) await this.initClient();
+    try {
+      // Ensure client is initialized before signing in
+      if (!gisInited || !tokenClient) {
+        await this.initClient();
+      }
+    } catch (err) {
+      console.error("Failed to initialize calendar client:", err);
+      throw new Error("Failed to initialize Google Calendar. Please check your connection and try again.");
+    }
+    
     return new Promise((resolve, reject) => {
+      if (!tokenClient) {
+        reject(new Error("Calendar not initialized"));
+        return;
+      }
+      
       tokenClient.callback = async (resp) => {
         if (resp.error) {
           reject(resp);
+          return;
         }
         resolve(resp);
       };
-      if (window.gapi.client.getToken() === null) {
+      
+      if (window.gapi && window.gapi.client && window.gapi.client.getToken() === null) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
       } else {
-        tokenClient.requestAccessToken({ prompt: '' });
+        try {
+          tokenClient.requestAccessToken({ prompt: '' });
+        } catch (e) {
+          // If prompt fails, try with consent
+          tokenClient.requestAccessToken({ prompt: 'consent' });
+        }
       }
     });
   },

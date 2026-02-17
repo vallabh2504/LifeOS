@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, FileText, CheckCircle, DollarSign, Flame, Book, Folder, HelpCircle } from 'lucide-react';
-import { useTheme } from '../../shared/contexts/ThemeContext';
-import { supabase } from '../../shared/services/supabaseClient';
+import { Search, X, FileText, CheckCircle, DollarSign, Flame, Book, Folder, HelpCircle, AlertCircle } from 'lucide-react';
+import { useTheme } from '../shared/contexts/ThemeContext';
+import { supabase } from '../shared/services/supabaseClient';
 
 const SearchBar = () => {
   const { theme, getThemeColors } = useTheme();
@@ -13,151 +13,205 @@ const SearchBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dbConnected, setDbConnected] = useState(true);
+  const searchRef = useRef(null);
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const searchData = async () => {
       if (query.length < 2) {
         setResults([]);
+        setError(null);
         return;
       }
 
       setLoading(true);
+      setError(null);
+      
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          setResults([]);
+          setError('Please sign in to search');
+          setLoading(false);
+          return;
+        }
 
         const searchTerm = `%${query.toLowerCase()}%`;
         const allResults = [];
 
-        // Search personal tasks
-        const { data: personalTasks } = await supabase
-          .from('personal_tasks')
-          .select('id, title, due_date')
-          .ilike('title', searchTerm)
-          .eq('user_id', user.id)
-          .limit(5);
-        
-        if (personalTasks) {
-          personalTasks.forEach(t => allResults.push({
-            type: 'Personal',
-            icon: <CheckCircle size={14} className="text-blue-400" />,
-            title: t.title,
-            subtext: t.due_date ? `Due: ${t.due_date.split('T')[0]}` : 'No due date',
-            action: () => navigate('/personal')
-          }));
+        try {
+          // Search personal tasks
+          const { data: personalTasks } = await supabase
+            .from('personal_tasks')
+            .select('id, title, due_date')
+            .ilike('title', searchTerm)
+            .eq('user_id', user.id)
+            .limit(5);
+          
+          if (personalTasks) {
+            personalTasks.forEach(t => allResults.push({
+              type: 'Personal',
+              icon: <CheckCircle size={14} className="text-blue-400" />,
+              title: t.title,
+              subtext: t.due_date ? `Due: ${t.due_date.split('T')[0]}` : 'No due date',
+              action: () => navigate('/personal')
+            }));
+          }
+        } catch (e) {
+          console.log('personal_tasks table not available');
         }
 
-        // Search development tasks
-        const { data: devTasks } = await supabase
-          .from('dev_tasks')
-          .select('id, title, status, project_id')
-          .ilike('title', searchTerm)
-          .eq('user_id', user.id)
-          .limit(5);
-        
-        if (devTasks) {
-          devTasks.forEach(t => allResults.push({
-            type: 'Development',
-            icon: <Folder size={14} className="text-purple-400" />,
-            title: t.title,
-            subtext: `Status: ${t.status}`,
-            action: () => navigate('/development')
-          }));
+        try {
+          // Search development tasks
+          const { data: devTasks } = await supabase
+            .from('dev_tasks')
+            .select('id, title, status, project_id')
+            .ilike('title', searchTerm)
+            .eq('user_id', user.id)
+            .limit(5);
+          
+          if (devTasks) {
+            devTasks.forEach(t => allResults.push({
+              type: 'Development',
+              icon: <Folder size={14} className="text-purple-400" />,
+              title: t.title,
+              subtext: `Status: ${t.status}`,
+              action: () => navigate('/development')
+            }));
+          }
+        } catch (e) {
+          console.log('dev_tasks table not available');
         }
 
-        // Search development notes
-        const { data: devNotes } = await supabase
-          .from('dev_notes')
-          .select('id, title, content')
-          .ilike('title', searchTerm)
-          .eq('user_id', user.id)
-          .limit(3);
-        
-        if (devNotes) {
-          devNotes.forEach(n => allResults.push({
-            type: 'Notes',
-            icon: <FileText size={14} className="text-indigo-400" />,
-            title: n.title,
-            subtext: n.content?.substring(0, 50) + '...',
-            action: () => navigate('/development')
-          }));
+        try {
+          // Search development notes
+          const { data: devNotes } = await supabase
+            .from('dev_notes')
+            .select('id, title, content')
+            .ilike('title', searchTerm)
+            .eq('user_id', user.id)
+            .limit(3);
+          
+          if (devNotes) {
+            devNotes.forEach(n => allResults.push({
+              type: 'Notes',
+              icon: <FileText size={14} className="text-indigo-400" />,
+              title: n.title,
+              subtext: n.content?.substring(0, 50) + '...',
+              action: () => navigate('/development')
+            }));
+          }
+        } catch (e) {
+          console.log('dev_notes table not available');
         }
 
-        // Search development doubts
-        const { data: devDoubts } = await supabase
-          .from('dev_doubts')
-          .select('id, question, resolved')
-          .ilike('question', searchTerm)
-          .eq('user_id', user.id)
-          .limit(3);
-        
-        if (devDoubts) {
-          devDoubts.forEach(d => allResults.push({
-            type: 'Doubts',
-            icon: <HelpCircle size={14} className="text-yellow-400" />,
-            title: d.question,
-            subtext: d.resolved ? 'Resolved' : 'Unresolved',
-            action: () => navigate('/development')
-          }));
+        try {
+          // Search development doubts
+          const { data: devDoubts } = await supabase
+            .from('dev_doubts')
+            .select('id, question, resolved')
+            .ilike('question', searchTerm)
+            .eq('user_id', user.id)
+            .limit(3);
+          
+          if (devDoubts) {
+            devDoubts.forEach(d => allResults.push({
+              type: 'Doubts',
+              icon: <HelpCircle size={14} className="text-yellow-400" />,
+              title: d.question,
+              subtext: d.resolved ? 'Resolved' : 'Unresolved',
+              action: () => navigate('/development')
+            }));
+          }
+        } catch (e) {
+          console.log('dev_doubts table not available');
         }
 
-        // Search expenses
-        const { data: expenses } = await supabase
-          .from('expenses')
-          .select('id, amount, description, category')
-          .ilike('description', searchTerm)
-          .eq('user_id', user.id)
-          .limit(3);
-        
-        if (expenses) {
-          expenses.forEach(e => allResults.push({
-            type: 'Finance',
-            icon: <DollarSign size={14} className="text-emerald-400" />,
-            title: `$${e.amount} - ${e.category}`,
-            subtext: e.description,
-            action: () => navigate('/finance')
-          }));
+        try {
+          // Search expenses
+          const { data: expenses } = await supabase
+            .from('expenses')
+            .select('id, amount, description, category')
+            .ilike('description', searchTerm)
+            .eq('user_id', user.id)
+            .limit(3);
+          
+          if (expenses) {
+            expenses.forEach(e => allResults.push({
+              type: 'Finance',
+              icon: <DollarSign size={14} className="text-emerald-400" />,
+              title: `$${e.amount} - ${e.category}`,
+              subtext: e.description,
+              action: () => navigate('/finance')
+            }));
+          }
+        } catch (e) {
+          console.log('expenses table not available');
         }
 
-        // Search habits
-        const { data: habits } = await supabase
-          .from('habits')
-          .select('id, title')
-          .ilike('title', searchTerm)
-          .eq('user_id', user.id)
-          .limit(3);
-        
-        if (habits) {
-          habits.forEach(h => allResults.push({
-            type: 'Habit',
-            icon: <Flame size={14} className="text-orange-400" />,
-            title: h.title,
-            subtext: 'Habit tracker',
-            action: () => navigate('/habits')
-          }));
+        try {
+          // Search habits
+          const { data: habits } = await supabase
+            .from('habits')
+            .select('id, title')
+            .ilike('title', searchTerm)
+            .eq('user_id', user.id)
+            .limit(3);
+          
+          if (habits) {
+            habits.forEach(h => allResults.push({
+              type: 'Habit',
+              icon: <Flame size={14} className="text-orange-400" />,
+              title: h.title,
+              subtext: 'Habit tracker',
+              action: () => navigate('/habits')
+            }));
+          }
+        } catch (e) {
+          console.log('habits table not available');
         }
 
-        // Search journal entries
-        const { data: journal } = await supabase
-          .from('journal_entries')
-          .select('id, title, content, entry_date')
-          .ilike('title', searchTerm)
-          .eq('user_id', user.id)
-          .limit(3);
-        
-        if (journal) {
-          journal.forEach(j => allResults.push({
-            type: 'Journal',
-            icon: <Book size={14} className="text-pink-400" />,
-            title: j.title,
-            subtext: j.entry_date,
-            action: () => navigate('/journal')
-          }));
+        try {
+          // Search journal entries
+          const { data: journal } = await supabase
+            .from('journal_entries')
+            .select('id, title, content, entry_date')
+            .ilike('title', searchTerm)
+            .eq('user_id', user.id)
+            .limit(3);
+          
+          if (journal) {
+            journal.forEach(j => allResults.push({
+              type: 'Journal',
+              icon: <Book size={14} className="text-pink-400" />,
+              title: j.title,
+              subtext: j.entry_date,
+              action: () => navigate('/journal')
+            }));
+          }
+        } catch (e) {
+          console.log('journal_entries table not available');
         }
 
         setResults(allResults);
+        setDbConnected(true);
       } catch (error) {
         console.error('Search error:', error);
+        setError('Database connection error. Please refresh the page.');
+        setDbConnected(false);
+        setResults([]);
       } finally {
         setLoading(false);
       }
@@ -168,7 +222,7 @@ const SearchBar = () => {
   }, [query]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={searchRef}>
       <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${colors.border} ${colors.cardBg} ${colors.text} transition-all focus-within:border-opacity-100`} style={{ borderColor: colors.primaryLight }}>
         <Search size={18} className={colors.muted} />
         <input
@@ -183,7 +237,7 @@ const SearchBar = () => {
           className={`bg-transparent outline-none flex-1 ${colors.text} placeholder:${colors.muted}`}
         />
         {query && (
-          <button onClick={() => { setQuery(''); setResults([]); }} className={colors.muted}>
+          <button onClick={() => { setQuery(''); setResults([]); setError(null); }} className={colors.muted}>
             <X size={16} />
           </button>
         )}
@@ -193,6 +247,11 @@ const SearchBar = () => {
         <div className={`absolute top-full mt-2 w-96 max-h-96 overflow-y-auto rounded-xl ${colors.cardBg} border ${colors.border} shadow-xl z-50`}>
           {loading ? (
             <div className={`p-4 text-center ${colors.muted}`}>Searching...</div>
+          ) : error ? (
+            <div className={`p-4 text-center ${colors.muted} flex items-center justify-center gap-2`}>
+              <AlertCircle size={16} />
+              {error}
+            </div>
           ) : results.length > 0 ? (
             <div className="py-2">
               {results.map((result, idx) => (
@@ -222,14 +281,6 @@ const SearchBar = () => {
             <div className={`p-4 text-center ${colors.muted}`}>No results found</div>
           )}
         </div>
-      )}
-
-      {/* Click outside to close */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setIsOpen(false)}
-        />
       )}
     </div>
   );

@@ -95,6 +95,10 @@ const DevelopmentDeck = () => {
 
   const handlePushToCalendar = async (task) => {
     try {
+      // Show loading state
+      const confirmSync = window.confirm(`Push "${task.title}" to Google Calendar?`);
+      if (!confirmSync) return;
+      
       await calendarService.signIn();
       const event = {
         summary: `[Dev] ${task.title}`,
@@ -110,10 +114,11 @@ const DevelopmentDeck = () => {
       };
       const createdEvent = await calendarService.createEvent(event);
       await updateTask(task.id, { gcal_event_id: createdEvent.id });
-      alert('Task pushed to Google Calendar!');
+      alert('✅ Task pushed to Google Calendar!');
     } catch (error) {
       console.error('Failed to push to calendar:', error);
-      alert('Failed to push to calendar. Check console for details.');
+      const errorMessage = error.message || error.error?.message || 'Unknown error';
+      alert(`❌ Failed to push to calendar.\n\nError: ${errorMessage}\n\nMake sure you're signed in with a Google account.`);
     }
   };
 

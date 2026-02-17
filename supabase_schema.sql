@@ -364,3 +364,22 @@ alter table public.dev_doubts enable row level security;
 
 create policy "Users can CRUD their own dev doubts" on public.dev_doubts
   for all using (auth.uid() = user_id);
+
+-- 12. PERSONAL DECK
+create table public.personal_tasks (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  title text not null,
+  description text,
+  status text default 'pending' check (status in ('pending', 'completed')),
+  due_date timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.personal_tasks enable row level security;
+
+create policy "Users can CRUD their own personal tasks" on public.personal_tasks
+  for all using (auth.uid() = user_id);
+
+create trigger update_personal_tasks_timestamp before update on public.personal_tasks
+  for each row execute procedure update_timestamp();
